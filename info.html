@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Why s-traps are outdated and bad</title>
+  <meta name="description" content="Starter Template">
+  <meta name="author" content="Gregry Pike">
+  <link rel="stylesheet" href="css/styles.css?v=1.0">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Open+Sans&display=swap" rel="stylesheet">
+  <!--[if lt IE 9]>
+  <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+  <![endif]-->
+</head>
+<body style="text-align: center; background-color:grey; display: flex; justify-content: center; font-family: 'Open Sans', sans-serif;">
+  <script src="js/scripts.js"></script>
+  <div>
+    <h1> Do you have a p-trap or s-trap?</h1>
+    <img style='height: auto; width: 40%; object-fit: contain; display: block;
+  margin-left: auto;
+  margin-right: auto;
+' src="./0520-jlc-q-a-p-trap-web-01.jpg" alt="P-trap or S-trap infographic">
+    <div id="flex-container">
+    <p style="display: inline-block">Start (access webcam): </p>
+    <a style="display: inline-block" href="#" class="next" onclick="init()">Next &raquo;</a></div>
+    <div id="webcam-container"></div>
+    <div id="label-container"></div>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@1.3.1/dist/tf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@0.8/dist/teachablemachine-image.min.js"></script>
+    <form style="margin-top: 40px">
+        <label for="file">Select a file:</label>
+        <input type="file" id="fileInput" name="fileInput"><br><br>
+    </form>
+    <script type="text/javascript">
+        // More API functions here:
+        // https://github.com/googlecreativelab/teachablemachine-community/tree/master/libraries/image
+
+        // the link to your model provided by Teachable Machine export panel
+        const URL = "https://teachablemachine.withgoogle.com/models/CeP-P7mHa/";
+
+        let model, webcam, labelContainer, maxPredictions;
+
+        // Load the image model and setup the webcam
+        async function init() {
+            const modelURL = URL + "model.json";
+            const metadataURL = URL + "metadata.json";
+
+            // load the model and metadata
+            // Refer to tmImage.loadFromFiles() in the API to support files from a file picker
+            // or files from your local hard drive
+            // Note: the pose library adds "tmImage" object to your window (window.tmImage)
+            model = await tmImage.load(modelURL, metadataURL);
+            maxPredictions = model.getTotalClasses();
+
+            // Convenience function to setup a webcam
+            const flip = true; // whether to flip the webcam
+            webcam = new tmImage.Webcam(200, 200, flip); // width, height, flip
+            await webcam.setup(); // request access to the webcam
+            await webcam.play();
+            window.requestAnimationFrame(loop);
+
+            // append elements to the DOM
+            document.getElementById("webcam-container").appendChild(webcam.canvas);
+            labelContainer = document.getElementById("label-container");
+            for (let i = 0; i < maxPredictions; i++) { // and class labels
+                labelContainer.appendChild(document.createElement("div"));
+            }
+        }
+
+        async function loop() {
+            webcam.update(); // update the webcam frame
+            await predict();
+            window.requestAnimationFrame(loop);
+        }
+
+        // run the webcam image through the image model
+        async function predict() {
+            // predict can take in an image, video or canvas html element
+            const prediction = await model.predict(webcam.canvas);
+            for (let i = 0; i < maxPredictions; i++) {
+                const classPrediction =
+                    prediction[i].className + ": " + prediction[i].probability.toFixed(2);
+                labelContainer.childNodes[i].innerHTML = classPrediction;
+            }
+        }
+
+
+
+
+        // Assuming that you already have a File Input or Drop event that can pass a file to the
+        // following function
+        function loadImage(evt) {
+            var files = evt.target.files; // FileList object
+
+            // use the 1st file from the list
+            f = files[0];
+
+            const reader = new FileReader();
+            reader.onloadend = function () {
+                const img = new Image();
+                img.onload = async function () {
+                    // Assuming that you have already loaded the model as in the example
+                    const prediction = await model.predict(img);
+                    // Do something with prediction
+                }
+                img.src = reader.result;
+            }
+            reader.readAsText(f);
+        }
+
+        
+        document.getElementById("fileInput").addEventListener('change', loadImage, false);
+        
+    </script>
+    <div style="display: flex;
+  justify-content: space-around; height: 30%; width: auto;">
+        <img src="./0520-jlc-q-a-p-trap-web-00-thumbnail.jpg" alt="P-trap + vent">
+        <img src="./Screen shot 2013-11-14 at 11.30.43 AM.png" alt="Bow Vent">
+        <img src="./AAV-Image.jpg" alt="AAV (Air Admittance Valve)"> 
+    </div>
+
+  </div>
+</body>
+</html>
